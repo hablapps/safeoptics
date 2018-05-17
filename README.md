@@ -1,0 +1,1 @@
+Simple repo to play with typesafe affines and traversals, as well as with other reprentations (van Laarhoven, profunctor, concrete, etc.).
