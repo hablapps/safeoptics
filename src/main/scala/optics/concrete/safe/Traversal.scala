@@ -18,10 +18,7 @@ trait Traversal[S,T,A,B]{
 
 object Traversal{
 
-  sealed abstract class FunList[A,B,T]
-  case class Done[A,B,T](t: T) extends FunList[A,B,T]
-  case class More[A,B,T,FL <: FunList[A,B,B=>T]](
-    a: A, f: FL) extends FunList[A,B,T]
+  // EXTRACT
 
   trait Extract[S,T,A,B,In <: S]{
     type O <: T
@@ -36,6 +33,23 @@ object Traversal{
         type Out = _Out
       }
   }
+
+  // FUNLIST 
+
+  sealed abstract class FunList[A,B,T]
+  case class Done[A,B,T](t: T) extends FunList[A,B,T]
+  case class More[A,B,T,FL <: FunList[A,B,B=>T]](
+    a: A, f: FL) extends FunList[A,B,T]
+
+  // ADD ONE MORE
+
+  trait AddOneMore[A,B,T1,FL<:FunList[A,B,T1]]{
+    type T2
+    type Out <: More[A,B,FunList[A,B,B=>T2]
+    def apply(in: FL)(a: A, update: (B, T1) => 
+  }
+
+  // GET 
 
   trait Get[A,B,O, In <: FunList[A,B,O]]{
     type Out <: List[A]
@@ -58,6 +72,8 @@ object Traversal{
       def apply(fl: More[A,B,O,FL]) = ::(fl.a, G(fl.f))
     }
   }
+
+  // PUT 
 
   trait Put[A,B,O, In <: FunList[A,B,O]]{
     type Out <: List[B]

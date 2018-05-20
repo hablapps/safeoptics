@@ -13,12 +13,29 @@ class Content[A,B] extends safe.Traversal[List[A],List[B],A,B]{
     def apply(list: Nil[A]) = Done(Nil[B]())
   }
 
+  trait AsFunction[B,T]{
+    type Out
+  }
+
+  object AsFunction{
+    implicit def just[B,T] = new AsFunction[B,T]{
+      type Out = T
+    }
+
+    implicit def more[B,T](implicit as: AsFunction[B,T]) =
+      new AsFunction[B,B=>T]{
+        type Out = as.Out
+      }
+  }
+
   implicit def consContent[
       LA <: List[A], 
       LB <: List[B], 
-      FL <: FunList[A,B,LB],
+      O,
+      FL <: FunList[A,B,O],
       FL2 <: FunList[A,B,B=>B::LB]](implicit
-      E: Extract.Aux[List[A],List[B],A,B,LA,LB,FL]) = 
+      As: AsFunction[B,O,LB],
+      E: Extract.Aux[List[A],List[B],A,B,LA,O,FL]) = 
     new Extract[List[A], List[B], A, B, A :: LA]{
       type O = B :: LB
       type Out = More[A, B, B :: LB,FL2]
