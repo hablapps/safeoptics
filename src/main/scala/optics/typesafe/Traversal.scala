@@ -35,6 +35,8 @@ trait Traversal[S, T, A, B]{
       type InPut = _InPut
       type OutPut = _OutPut
     }
+
+
   }
 
   def apply[In <: S](t: In)(implicit E: Extract[In]): E.Out = E(t)
