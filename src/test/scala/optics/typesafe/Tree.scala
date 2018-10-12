@@ -1,9 +1,6 @@
 package org.hablapps.gist.optics
 package typesafe
 
-import shapeless.{Nat, Succ, _0}
-import shapeless.ops.nat.Sum
-
 sealed abstract class Tree[A]
 case class Leaf[A]() extends Tree[A]
 case class Node[T1 <: Tree[A], A, T2 <: Tree[A]](
@@ -11,67 +8,51 @@ case class Node[T1 <: Tree[A], A, T2 <: Tree[A]](
 
 object Tree{
 
-  import List.{Length, Concatenate}
-
   class Of[A,B]{
+    import shapeless.{Sized, Nat, Succ, _0}
+    import shapeless.syntax.sized._
+    import shapeless.ops.nat.{ToInt, Diff, Sum}
+
     implicit object InOrder extends typesafe.Traversal[Tree[A],Tree[B],A,B]{
 
       implicit val leafInOrder = new Extract[Leaf[A]]{
-        type Out = Result.Aux[Nil[A],Nil[B],Leaf[B]]
+        type Out = Result.Aux[_0, Leaf[B]]
 
         def apply(tree: Leaf[A]) = new Result{
-          type OutGet = Nil[A]
-          type InPut = Nil[B]
+          type N = _0
           type OutPut = Leaf[B]
 
-          type N = _0
-          val GetLength: Length.Aux[A,Nil[A],N] = Length.nilLength[A]
-          val PutLength: Length.Aux[B,Nil[B],N] = Length.nilLength[B]
-
-          def getAll() = Nil()
-          def putAll(nil: Nil[B]) = Leaf()
+          def getAll() = Sized[List]()
+          def putAll(nil: Sized[List[B], _0]) = Leaf[B]()
         }
       }
 
       implicit def nodeInOrder[
-        L <: Tree[A],
-        LG <: List[A],
-        LPI <: List[B],
-        LPO <: Tree[B],
-        R <: Tree[A],
-        RG <: List[A],
-        RPI <: List[B],
-        RPO <: Tree[B],
-        CG <: List[A],
-        CP <: List[B],
+        L <: Tree[A], L_N <: Nat, L_Out <: Tree[B],
+        R <: Tree[A], R_N <: Nat, R_Out <: Tree[B],
         _N <: Nat](implicit
-        extractL: Extract.Aux[L, Result.Aux[LG,LPI,LPO]],
-        extractR: Extract.Aux[R, Result.Aux[RG,RPI,RPO]],
-        concG: Concatenate.Aux[A, LG, A::RG, CG],
-        concP: Concatenate.Aux[B, LPI, B::RPI, CP],
-        lengthG: Length.Aux[A,CG,_N],
-        lengthP: Length.Aux[B,CP,_N]) =
+        extractL: Extract.Aux[L, Result.Aux[L_N, L_Out]],
+        extractR: Extract.Aux[R, Result.Aux[R_N, R_Out]],
+        S: Sum.Aux[L_N, Succ[R_N], _N],
+        D: Diff.Aux[_N, L_N, Succ[R_N]],
+        TI: ToInt[L_N]) =
 
         new Extract[Node[L,A,R]]{
-          type Out = Result.Aux[CG, CP, Node[LPO,B,RPO]]
+          type Out = Result.Aux[_N, Node[L_Out, B, R_Out]]
 
-          def apply(tree: Node[L,A,R]) = new Result{
-            type OutGet = CG
-            type InPut = CP
-            type OutPut = Node[LPO,B,RPO]
-
+          def apply(tree: Node[L, A, R]) = new Result{
             type N = _N
-            val GetLength = lengthG
-            val PutLength = lengthP
+            type OutPut = Node[L_Out, B, R_Out]
 
-            def getAll(): CG =
-              concG(extractL(tree.left).getAll,
-                ::(tree.root, extractR(tree.right).getAll))
+            def getAll() =
+              extractL(tree.left).getAll ++
+                (tree.root +: extractR(tree.right).getAll)
 
-            def putAll(content: CP) =
-              concP.split(content) match {
-                case (ll, ::(b, rl)) =>
-                  Node(extractL(tree.left).putAll(ll), b, extractR(tree.right).putAll(rl))
+            def putAll(content: Sized[List[B], N]) =
+              content.splitAt[L_N] match {
+                case (ll, rl) =>
+                  Node(extractL(tree.left).putAll(ll), rl.head,
+                    extractR(tree.right).putAll(rl.tail))
               }
           }
         }

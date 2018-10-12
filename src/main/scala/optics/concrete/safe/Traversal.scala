@@ -1,101 +1,101 @@
-package org.hablapps.gist.optics
-package concrete
-package safe
+// package org.hablapps.gist.optics
+// package concrete
+// package safe
 
-import typesafe.{List, Nil, ::}
-import Traversal._
+// import typesafe.{List, Nil, ::}
+// import Traversal._
 
-trait Traversal[S,T,A,B]{
-  
-  def apply[In <: S](s: In)(implicit E: Extract[S,T,A,B,In]): E.Out = 
-    E(s)
+// trait Traversal[S,T,A,B]{
 
-  def getAll[In <: S, O <: T, FL <: FunList[A,B,O], L <: List[A]](s: In)(implicit 
-    E: Extract.Aux[S,T,A,B,In,O,FL],
-    G: Get.Aux[A,B,O,FL,L]): G.Out = 
-    G(E(s))
-}
+//   def apply[In <: S](s: In)(implicit E: Extract[S,T,A,B,In]): E.Out =
+//     E(s)
 
-object Traversal{
+//   def getAll[In <: S, O <: T, FL <: FunList[A,B,O], L <: List[A]](s: In)(implicit
+//     E: Extract.Aux[S,T,A,B,In,O,FL],
+//     G: Get.Aux[A,B,O,FL,L]): G.Out =
+//     G(E(s))
+// }
 
-  // EXTRACT
+// object Traversal{
 
-  trait Extract[S,T,A,B,In <: S]{
-    type O <: T
-    type Out <: Traversal.FunList[A,B,O]
-    def apply(s: In): Out
-  }
+//   // EXTRACT
 
-  object Extract{
-    type Aux[S,T,A,B,In <: S, _O <: T, _Out <: Traversal.FunList[A,B,_O]] = 
-      Extract[S,T,A,B,In]{
-        type O = _O
-        type Out = _Out
-      }
-  }
+//   trait Extract[S,T,A,B,In <: S]{
+//     type O <: T
+//     type Out <: Traversal.FunList[A,B,O]
+//     def apply(s: In): Out
+//   }
 
-  // FUNLIST 
+//   object Extract{
+//     type Aux[S,T,A,B,In <: S, _O <: T, _Out <: Traversal.FunList[A,B,_O]] =
+//       Extract[S,T,A,B,In]{
+//         type O = _O
+//         type Out = _Out
+//       }
+//   }
 
-  sealed abstract class FunList[A,B,T]
-  case class Done[A,B,T](t: T) extends FunList[A,B,T]
-  case class More[A,B,T,FL <: FunList[A,B,B=>T]](
-    a: A, f: FL) extends FunList[A,B,T]
+//   // FUNLIST
 
-  // ADD ONE MORE
+//   sealed abstract class FunList[A,B,T]
+//   case class Done[A,B,T](t: T) extends FunList[A,B,T]
+//   case class More[A,B,T,FL <: FunList[A,B,B=>T]](
+//     a: A, f: FL) extends FunList[A,B,T]
 
-  trait AddOneMore[A,B,T1,FL<:FunList[A,B,T1]]{
-    type T2
-    type Out <: More[A,B,FunList[A,B,B=>T2]
-    def apply(in: FL)(a: A, update: (B, T1) => 
-  }
+//   // ADD ONE MORE
 
-  // GET 
+//   trait AddOneMore[A,B,T1,FL<:FunList[A,B,T1]]{
+//     type T2
+//     type Out <: More[A,B,FunList[A,B,B=>T2]
+//     def apply(in: FL)(a: A, update: (B, T1) =>
+//   }
 
-  trait Get[A,B,O, In <: FunList[A,B,O]]{
-    type Out <: List[A]
-    def apply(fl: In): Out
-  }
+//   // GET
 
-  object Get{
-    type Aux[A,B,O,FL <: FunList[A,B,O],_Out <: List[A]] = Get[A,B,O,FL]{
-      type Out = _Out 
-    }
+//   trait Get[A,B,O, In <: FunList[A,B,O]]{
+//     type Out <: List[A]
+//     def apply(fl: In): Out
+//   }
 
-    implicit def doneGet[A,B,O] = new Get[A,B,O,Done[A,B,O]]{
-      type Out = Nil[A]
-      def apply(fl: Done[A,B,O]) = Nil[A]()
-    }
+//   object Get{
+//     type Aux[A,B,O,FL <: FunList[A,B,O],_Out <: List[A]] = Get[A,B,O,FL]{
+//       type Out = _Out
+//     }
 
-    implicit def moreGet[A,B,O,FL <: FunList[A,B,B=>O]](implicit 
-      G: Get[A,B,B=>O,FL]) = new Get[A,B,O,More[A,B,O,FL]]{
-      type Out = A :: G.Out
-      def apply(fl: More[A,B,O,FL]) = ::(fl.a, G(fl.f))
-    }
-  }
+//     implicit def doneGet[A,B,O] = new Get[A,B,O,Done[A,B,O]]{
+//       type Out = Nil[A]
+//       def apply(fl: Done[A,B,O]) = Nil[A]()
+//     }
 
-  // PUT 
+//     implicit def moreGet[A,B,O,FL <: FunList[A,B,B=>O]](implicit
+//       G: Get[A,B,B=>O,FL]) = new Get[A,B,O,More[A,B,O,FL]]{
+//       type Out = A :: G.Out
+//       def apply(fl: More[A,B,O,FL]) = ::(fl.a, G(fl.f))
+//     }
+//   }
 
-  trait Put[A,B,O, In <: FunList[A,B,O]]{
-    type Out <: List[B]
-    def apply(fl: In): Out => O
-  }
+//   // PUT
 
-  object Put{
-    type Aux[A,B,O,FL <: FunList[A,B,O],_Out <: List[B]] = Put[A,B,O,FL]{
-      type Out = _Out 
-    }
+//   trait Put[A,B,O, In <: FunList[A,B,O]]{
+//     type Out <: List[B]
+//     def apply(fl: In): Out => O
+//   }
 
-    implicit def donePut[A,B,O] = new Put[A,B,O,Done[A,B,O]]{
-      type Out = Nil[B]
-      def apply(fl: Done[A,B,O]) = _ => fl.t
-    }
+//   object Put{
+//     type Aux[A,B,O,FL <: FunList[A,B,O],_Out <: List[B]] = Put[A,B,O,FL]{
+//       type Out = _Out
+//     }
 
-    implicit def morePut[A,B,O,FL <: FunList[A,B,B=>O]](implicit 
-      P: Put[A,B,B=>O,FL]) = new Put[A,B,O,More[A,B,O,FL]]{
-      type Out = B :: P.Out
-      def apply(fl: More[A,B,O,FL]) = bs => 
-        P(fl.f)(bs.tail)(bs.head)
-    }
-  }
+//     implicit def donePut[A,B,O] = new Put[A,B,O,Done[A,B,O]]{
+//       type Out = Nil[B]
+//       def apply(fl: Done[A,B,O]) = _ => fl.t
+//     }
 
-}
+//     implicit def morePut[A,B,O,FL <: FunList[A,B,B=>O]](implicit
+//       P: Put[A,B,B=>O,FL]) = new Put[A,B,O,More[A,B,O,FL]]{
+//       type Out = B :: P.Out
+//       def apply(fl: More[A,B,O,FL]) = bs =>
+//         P(fl.f)(bs.tail)(bs.head)
+//     }
+//   }
+
+// }

@@ -1,8 +1,7 @@
 package org.hablapps.gist.optics
 package typesafe
 
-import shapeless.Nat
-import List.Length
+import shapeless.{Sized, Nat}
 
 trait Traversal[S, T, A, B]{
 
@@ -18,25 +17,17 @@ trait Traversal[S, T, A, B]{
 
   trait Result{
     type N <: Nat
-    type OutGet <: List[A]
-    type InPut <: List[B]
     type OutPut <: T
-    
-    val GetLength: Length.Aux[A,OutGet,N]
-    val PutLength: Length.Aux[B,InPut,N]
 
-    def getAll(): OutGet
-    def putAll(values: InPut): OutPut
+    def getAll(): Sized[List[A], N]
+    def putAll(values: Sized[List[B], N]): OutPut
   }
 
   object Result{
-    type Aux[_OutGet <: List[A], _InPut <: List[B], _OutPut <: T] = Result{
-      type OutGet = _OutGet
-      type InPut = _InPut
+    type Aux[_N <: Nat, _OutPut <: T] = Result{
+      type N = _N
       type OutPut = _OutPut
     }
-
-
   }
 
   def apply[In <: S](t: In)(implicit E: Extract[In]): E.Out = E(t)
