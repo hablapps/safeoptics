@@ -1,0 +1,68 @@
+{-# OPTIONS --verbose=10 #-}
+
+module trees where
+
+
+  data Tree (A : Set) : Set where
+    empty : Tree A
+    node : Tree A -> A -> Tree A -> Tree A
+
+  {- Inorder traversal -}
+
+  open import Data.Nat
+  open import Data.Vec
+  open import Agda.Builtin.Sigma
+  open import Data.Product
+  open import Data.Fin using (fromℕ)
+  open import optics
+
+  import Relation.Binary.PropositionalEquality as Eq
+  open Eq using (_≡_; refl; trans; sym; cong; cong-app; subst)
+  
+  -- postulate r : {n₁ n₂} (n₁ ≡ n₁) -- 
+  postulate i : (n₁ n₂ : ℕ) -> (n₁ + (1 + n₂)) ≡ (1 + (n₁ + n₂))
+  postulate j : (n₁ n₂ : ℕ) -> (n₁ + (1 + n₂)) ≡ ((n₁ + 1) + n₂)
+  
+  aux : {A B T : Set} -> (n₁ n₂ : ℕ) -> Vec B (n₁ + (1 + n₂))
+                      -> (Vec B n₂ -> T) -> T
+ -- aux n₁ n₂ v f with n₁ + (1 + n₂) | i n₁ n₂
+  --... | _ | refl = f (drop (1 + n₁) v)
+  aux n₁ n₂ v f rewrite i n₁ n₂ =
+    f (drop (1 + n₁) v)
+    
+  inorderStore : {A : Set} {n₁ n₂ : ℕ} -> A -> 
+                    Vec A n₁ × (Vec A n₁ -> Tree A) ->
+                    Vec A n₂ × (Vec A n₂ -> Tree A) ->
+                    Vec A (n₁ + (1 + n₂)) × (Vec A (n₁ + (1 + n₂)) -> Tree A)
+  inorderStore {A} {n₁} {n₂} x (g₁ , p₁) (g₂ , p₂) rewrite i n₁ n₂ =
+      ({!!} , -- g₁ ++ (x ∷ g₂) ,
+       λ v -> node (p₁ (take n₁ {!!}))
+                  (head (drop n₁ {!!})) -- (lookup (fromℕ (n₁ + 1)) v)
+                  (p₂ (drop (1 + n₁) v)))
+                  -- (p₂ (drop 1 (drop n₁ v)))))
+                  -- (aux {A} {A} {Tree A} n₁ n₂ v p₂)))
+
+  inorderStore' : {A : Set} {n₁ n₂ : ℕ} -> A -> 
+                    Vec A n₁ × (Vec A n₁ -> Tree A) ->
+                    Vec A n₂ × (Vec A n₂ -> Tree A) ->
+                    Vec A (n₁ + (1 + n₂)) × (Vec A (n₁ + (1 + n₂)) -> Tree A)
+  inorderStore' {A} {n₁} {n₂} x (g₁ , p₁) (g₂ , p₂) 
+      ({!!} , -- g₁ ++ (x ∷ g₂) ,
+       λ v -> node (p₁ (take n₁ {!!}))
+                  (head (drop n₁ {!!})) -- (lookup (fromℕ (n₁ + 1)) v)
+                  (p₂ (drop (1 + n₁) v)))
+                  -- (p₂ (drop 1 (drop n₁ v)))))
+                  -- (aux {A} {A} {Tree A} n₁ n₂ v p₂)))
+
+  inorderTree : {A : Set} -> Tree A -> Σ[ n ∈ ℕ ] Vec A n × (Vec A n -> Tree A) 
+  inorderTree empty = (0 , ([] , \_ -> empty))
+  inorderTree {A} (node t x t₁) with inorderTree t | inorderTree t₁ 
+  ... | (n₁ , store₁) | (n₂ , store₂) =
+    (n₁ + (1 + n₂) , inorderStore x store₁ store₂)
+
+
+    
+  inorder : {A : Set} -> Traversal (Tree A) (Tree A) A A
+  inorder = record{ extract = inorderTree }
+                            
+
