@@ -14,7 +14,7 @@ enablePlugins(TutPlugin)
 
 libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "3.0.0",
-  "com.chuusai" %% "shapeless" % "2.3.2",
+  "com.chuusai" %% "shapeless" % "2.3.3",
   "org.scalaz" %% "scalaz-core" % "7.2.7"
 )
 

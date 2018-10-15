@@ -1,0 +1,11 @@
+module optics where
+
+  open import Data.Nat
+  open import Data.Vec
+  open import Agda.Builtin.Sigma
+  open import Data.Product
+ 
+  record Traversal (S T A B : Set) : Set where
+    field
+      extract : S -> Σ[ n ∈ ℕ ] Vec A n × (Vec B n -> T)
+
