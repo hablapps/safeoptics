@@ -1,0 +1,18 @@
+
+This post aims at illustrating how to solve type-level problems in
+Scala, and how they are typically solved using other languages which 
+have a finer control over type-dependent features. 
+
+The problem is the following. We want to be able to access and update
+the leafs of a tree. So, given a tree:
+
+```tut
+sealed abstract class Tree[A]
+case class Leaf[A]() extends Tree[A]
+case class Node[A](left: Tree[A], root: A, right: Tree[A]) extends Tree[A]
+```
+
+We'd like to do something like this:
+
+val t : 
+

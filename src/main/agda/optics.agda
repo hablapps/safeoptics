@@ -26,3 +26,8 @@ module optics where
       -- put-get-law : (s : S) -> (v : Vec A (fst (Traversal.extract t s))) ->
       --  (Traversal.get t (Traversal.put t s v)) ≡ {!!}
 
+
+  record Traversal2 (S A B T : Set) : Set where
+    field
+      extract : (s : S) -> Σ[ f ∈ (S -> ℕ) ] Vec A (f s) × (Vec B (f s) -> T)
+

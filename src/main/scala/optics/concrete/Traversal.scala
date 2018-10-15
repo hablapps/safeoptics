@@ -18,7 +18,7 @@ object Traversal{
         case More(a,f) => a::f.getAll
       }
 
-      def putAll(l: List[B]): T = (l,f) match {
+      def putAll(l: List[B]): T = ((l,f) : @unchecked) match {
         case (Nil, Done(t)) => t
         case (head :: tail, More(_, flb)) => flb.putAll(tail)(head)
         // otherwise, undefined
@@ -42,12 +42,13 @@ object Traversal{
 
     implicit def ApplicativeFunList[A, B] = new Applicative[FunList[A, B, ?]]{
       def point[T](t: => T) = Done(t)
-      def ap[S, T](fs: => FunList[A, B, S])(fst: => FunList[A, B, S => T]): FunList[A, B, T] =
-        (fs, fst) match {
-          case (fls, Done(st)) =>
-            fls map st
-          case (fls, More(a, flbst)) =>
-            More(a, ap(fls)(flbst map (fsbt => (s: S) => (b: B) => fsbt(b)(s))))
+      def ap[S, T](fs: => FunList[A, B, S])(
+          fst: => FunList[A, B, S => T]): FunList[A, B, T] =
+        fst match {
+          case Done(st) =>
+            fs map st
+          case More(a, flbst) =>
+            More(a, ap(fs)(flbst map (fsbt => (s: S) => (b: B) => fsbt(b)(s))))
         }
     }
 
