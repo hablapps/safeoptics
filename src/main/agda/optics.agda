@@ -8,8 +8,13 @@ module optics where
   import Relation.Binary.PropositionalEquality as Eq
   open Eq using (_≡_; refl; trans; sym; cong; cong-app; subst)
  
+  record TraversalF (S T A B : Set) : Set where
+    field
+      extract : Σ[ f ∈ (S -> ℕ) ] ((s : S) -> Vec A (f s) × (Vec B (f s) -> T))
+
   record Traversal (S T A B : Set) : Set where
     field
+      --extract : S -> ∃[ n ] (Vec A n × (Vec B n -> T))
       extract : S -> Σ[ n ∈ ℕ ] Vec A n × (Vec B n -> T)
 
     get : (s : S) -> Vec A (fst (extract s))
