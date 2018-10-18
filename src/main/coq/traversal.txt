@@ -1,0 +1,48 @@
+# GetPut
+========
+  extract . tr = id
+= [pointwise]
+  (extract . tr) s = id s
+= [unfold .]
+  extract (tr s) = id s
+= [unfold id]
+  extract (tr s) = s
+= [unfold extract for BiStore]
+  put (tr s) (get (tr s)) = s
+□
+
+# PutGet, PutPut & New Law
+==========================
+  duplicate . tr = fmap tr . tr
+= [pointwise]
+  (duplicate . tr) s = (fmap tr . tr) s
+= [unfold .]
+  duplicate (tr s) = fmap tr (tr s)
+= [unfold duplicate for BiStore]
+  BiStore (n (tr s)) (get (tr s)) (fun as => BiStore (n (tr s)) as (fun as2 => put (tr s) as2)) =
+  fmap tr (tr s)
+= [unfold fmap]
+  BiStore (n (tr s)) (get (tr s)) (fun as => BiStore (n (tr s)) as (fun as2 => put (tr s) as2)) =
+  BiStore (n (tr s)) (get (tr s)) (tr . put (tr s))
+= [unfold .]
+  BiStore (n (tr s)) (get (tr s)) (fun as => BiStore (n (tr s)) as (fun as2 => put (tr s) as2)) =
+  BiStore (n (tr s)) (get (tr s)) (fun as => tr (put (tr s) as))
+= [equality]
+  fun as => BiStore (n (tr s)) as (fun as2 => put (tr s) as2) =
+  fun as => tr (put (tr s) as)
+= [tr expansion]
+  fun as => BiStore (n (tr s)) as (fun as2 => put (tr s) as2) =
+  fun as => BiStore (n (tr (put (tr s) as))) (get (tr (put (tr s) as))) (put (tr (put (tr s) as)))
+= [equality]
+  n (tr s) = n (tr (put (tr s) as)) /\
+  as = get (tr (put (tr s) as))     /\
+  (fun as2 => put (tr s) as2) = put (tr (put (tr s) as))
+= [pointwise]
+  n (tr s) = n (tr (put (tr s) as)) /\
+  as = get (tr (put (tr s) as))     /\
+  (fun as2 => put (tr s) as2) = (fun as2 => put (tr (put (tr s) as)) as2)
+= [functional extensionality]
+  n (tr s) = n (tr (put (tr s) as)) /\
+  as = get (tr (put (tr s) as))     /\
+  put (tr s) as2 = put (tr (put (tr s) as)) as2
+□
