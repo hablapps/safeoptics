@@ -1,5 +1,6 @@
 *.class
 *.log
+*.agdai
 
 # sbt specific
 .cache
