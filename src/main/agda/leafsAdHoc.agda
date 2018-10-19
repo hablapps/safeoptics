@@ -18,11 +18,11 @@ module leafsAdHoc where
       get : (s : Tree A) -> Vec A (#leafs s)
       put : (s : Tree A) -> Vec A (#leafs s) -> Tree A
 
-  update : {A : Set} -> (s : Tree A) -> Vec A (#leafs' s) -> Tree A
+  update : {A : Set} -> (s : Tree A) -> Vec A (#leafs s) -> Tree A
   update empty _ = empty
-  update (node t1 x t2) v with isLeaf' (node t1 x t2)
-  ...                         | true = {!!} -- node empty (head v) empty
-  ...                         | false = {!!} -- node (update' t1 (take (#leafs' t1) v)) x (update' t2 (drop (#leafs' t1) v))
+  update (node t1 x t2) v with isLeaf (node t1 x t2)
+  ...                         | true = node empty (head v) empty
+  ...                         | false = node (update t1 (take (#leafs t1) v)) x (update t2 (drop (#leafs t1) v))
 
   update' : {A : Set} -> (s : Tree A) -> Vec A (#leafs'' s) -> Tree A
   update' empty _ = empty
@@ -30,7 +30,7 @@ module leafsAdHoc where
   ...                         | yes = {!!} -- node empty (head v) empty
   ...                         | no = {!!} -- node (update' t1 (take (#leafs' t1) v)) x (update' t2 (drop (#leafs' t1) v))
 
-  update'' : {A : Set} -> (s : Tree A) -> Vec A (#leafs' s) -> Tree A
+  update'' : {A : Set} -> (s : Tree A) -> Vec A (#leafs s) -> Tree A
   update'' t v with isLeaf'' t
   update'' empty [] | no = empty
   update'' (node .empty x .empty) (x₁ ∷ v) | yes = node empty x₁ empty

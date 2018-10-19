@@ -15,23 +15,23 @@ module trees where
 
   -- Plain version
   
-  #leafs : {A : Set} -> Tree A -> ℕ
-  #leafs empty = zero
-  #leafs (node empty x empty) = 1
-  #leafs (node t x t₁) = #leafs t + #leafs t₁
+  #leafs' : {A : Set} -> Tree A -> ℕ
+  #leafs' empty = zero
+  #leafs' (node empty x empty) = 1
+  #leafs' (node t x t₁) = #leafs' t + #leafs' t₁
 
   -- Version with boolean function isLeaf
   
   open import Data.Bool
-  isLeaf' : {A : Set} -> Tree A -> Bool
-  isLeaf' (node empty _ empty) = true
-  isLeaf' _ = false
+  isLeaf : {A : Set} -> Tree A -> Bool
+  isLeaf (node empty _ empty) = true
+  isLeaf _ = false
 
-  #leafs' : {A : Set} -> Tree A -> ℕ
-  #leafs' empty = zero 
-  #leafs' (node t x t₁) with isLeaf' (node t x t₁)
+  #leafs : {A : Set} -> Tree A -> ℕ
+  #leafs empty = zero 
+  #leafs (node t x t₁) with isLeaf (node t x t₁)
   ...                   | true = 1
-  ...                   | false = #leafs' t + #leafs' t₁
+  ...                   | false = #leafs t + #leafs t₁
   
   -- Version with view isLeaf 
   
