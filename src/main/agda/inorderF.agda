@@ -12,24 +12,35 @@ module inorderF where
   open import optics
   open import lemmas  
   
-  inorderTreeF : {A : Set} -> (t : Tree A) -> Vec A (#nodes t) × (Vec A (#nodes t) -> Tree A) 
-  inorderTreeF empty = ([] , λ _ -> empty)
-  inorderTreeF {A} (node t₁ x t₂) with inorderTreeF t₁ | inorderTreeF t₂ 
-  ...                                | (g₁ , p₁)       | (g₂ , p₂) =
-    (g₁ ++ (x ∷ g₂) , λ v -> node (p₁ (take n₁ v)) (head (drop n₁ v)) (righttree v))
+  inorder : {A : Set} -> TraversalF (Tree A) (Tree A) A A #nodes
+  inorder {A} = record{ get = inorderGet ; put = inorderPut }
     where
-      n  = #nodes (node t₁ x t₂)
-      n₁ = #nodes t₁
-      n₂ = #nodes t₂
-      righttree :  Vec A n -> Tree A
-      righttree v rewrite +-suc n₁ n₂ = p₂ (drop (1 + n₁) v)
-    
-  inorderF : {A : Set} -> TraversalF (Tree A) (Tree A) A A
-  inorderF = record{ extract = (#nodes , inorderTreeF) }
+      inorderGet : {A : Set} -> (t : Tree A) -> Vec A (#nodes t)
+      inorderGet empty = []
+      inorderGet (node t₁ x t₂) = inorderGet t₁ ++ (x ∷ inorderGet t₂)
+
+      inorderPut : {A : Set} -> (t : Tree A) -> Vec A (#nodes t) -> Tree A
+      inorderPut empty _ = empty
+      inorderPut {A} (node t₁ x t₂) v =
+        node (p₁ (take n₁ v)) (head (drop n₁ v)) (p₂ (drop 1 (drop n₁ v))) -- (righttree v)
+        where
+          p₁ = inorderPut t₁
+          p₂ = inorderPut t₂
+          n₁ = #nodes t₁
+          -- n  = #nodes (node t₁ x t₂)
+          -- n₂ = #nodes t₂
+          -- righttree :  Vec A n -> Tree A
+          -- righttree v rewrite +-suc n₁ n₂ = p₂ (drop (1 + n₁) v)
 
   module tests where
     tree1 : Tree ℕ
-    tree1 = node (node empty 1 empty) 3 empty
+    tree1 = node (node empty 1 (leaf 2)) 3 (node (leaf 4) 5 (leaf 6))
 
-    open Traversal
+    open TraversalF
+
+    inorder1 : Vec ℕ 6
+    inorder1 = get inorder tree1
+
+    tree2 : Tree ℕ
+    tree2 = put inorder tree1 (6 ∷ 5 ∷ 4 ∷ 3 ∷ 2 ∷ 1 ∷ [])
   
