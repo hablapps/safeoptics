@@ -12,76 +12,59 @@ module leafsAdHoc where
   open import trees
   open import optics
   open import lemmas  
+
+  -- PLAIN VERSION
   
-  record Leafs (A : Set) : Set where
-    field
-      get : (s : Tree A) -> Vec A (#leafs s)
-      put : (s : Tree A) -> Vec A (#leafs s) -> Tree A
+  get : {A : Set} -> (s : Tree A) -> Vec A (#leafs s)
+  get empty = []
+  get (node s x s₁) with isLeaf (node s x s₁)
+  ...                  | true = x ∷ []
+  ...                  | false = get s ++ get s₁
 
   update : {A : Set} -> (s : Tree A) -> Vec A (#leafs s) -> Tree A
   update empty _ = empty
   update (node t1 x t2) v with isLeaf (node t1 x t2)
-  ...                         | true = node empty (head v) empty
-  ...                         | false = node (update t1 (take (#leafs t1) v)) x (update t2 (drop (#leafs t1) v))
+  update _ (head ∷ []) | true = node empty head empty
+  ...                  | false = node updated1 x updated2
+    where 
+      updated1 = update t1 (take (#leafs t1) v)
+      updated2 = update t2 (drop (#leafs t1) v)
 
-  update' : {A : Set} -> (s : Tree A) -> Vec A (#leafs'' s) -> Tree A
-  update' empty _ = empty
-  update' (node t1 x t2) v with isLeaf'' (node t1 x t2)
-  ...                         | yes = {!!} -- node empty (head v) empty
-  ...                         | no = {!!} -- node (update' t1 (take (#leafs' t1) v)) x (update' t2 (drop (#leafs' t1) v))
+  GetLeafs : (A : Set) -> Set
+  GetLeafs A = (s : Tree A) -> Vec A (#leafs s)
 
-  update'' : {A : Set} -> (s : Tree A) -> Vec A (#leafs s) -> Tree A
-  update'' t v with isLeaf'' t
-  update'' empty [] | no = empty
-  update'' (node .empty x .empty) (x₁ ∷ v) | yes = node empty x₁ empty
-  update'' (node t x t₁) v | no = {!!} -- node (update t (take (#leafs t) v)) x (update t₁ (drop (#leafs t) v))
+  UpdateLeafs : (A : Set) -> Set
+  UpdateLeafs A = (s : Tree A) -> Vec A (#leafs s) -> Tree A
 
-  update''' : {A : Set} -> (s : Tree A) -> Vec A (#leafs s) -> Tree A
-  update''' empty _ = empty
-  update''' (node t x t₁) v with isLeaf'' (node t x t₁)
-  ...                          | yes = node empty (head v) empty
-  ...                          | noL = node (update''' t (take (#leafs t) v)) x empty
-  ...                          | noR = node empty x (update''' t (take (#leafs t) v))
-  ...                          | noLR = node (update''' t (take (#leafs t) v)) x (update''' t₁ (drop (#leafs t) v))
+  Leafs : {A : Set} -> GetLeafs A × UpdateLeafs A
+  Leafs = (get , update)
 
-  foo : {A : Set } -> Tree A -> ℕ
-  foo t with isLeaf'' t 
-  foo .(node empty _ empty) | yes = zero
-  foo .empty | noE = {!!}
-  foo .(node (node _ _ _) _ empty) | noL = {!!}
-  foo .(node empty _ (node _ _ _)) | noR = {!!}
-  foo .(node (node _ _ _) _ (node _ _ _)) | noLR = {!!} 
-{-
-  update : {A : Set} -> (s : Tree A) -> Vec A (#leafs s) -> Tree A
-  update empty _ =
-    empty
-  update (node empty x empty) (x₁ ∷ v) =
-    node empty x₁ empty 
-  update (node empty x (node s₁ x₁ s₂)) v =
-    node empty x (update (node s₁ x₁ s₂) v)
-  update (node (node s x₁ s₂) x empty) v rewrite +-zero (#leafs (node s x₁ s₂)) =
-    node (update (node s x₁ s₂) v) x empty
-  update (node (node s x₁ s₂) x (node s₁ x₂ s₃)) v =
-    {!!} -- node (update (node s x₁ s₂) (take (#leafs (node s x₁ s₂)) v)) x (update (node s₁ x₂ s₃) (drop (#leafs (node s x₁ s₂)) v))
--}
-
-
-{-
-  update : {A : Set} -> (s : Tree A) -> Vec A (#leafs s) -> Tree A
-  update empty v = {!!} -- empty
-  update (node empty x empty) v = {!!} -- node empty y empty
-  update (node t₁ x t₂) v = {!!}
--}
-
-
-{-
-  update : {A : Set} -> (s : Tree A) -> Vec A (#leafs s) -> Tree A
-  update empty _ =
-    empty
-  update (node t₁ x t₂) v with t₁ | t₂
-  update (node t₁ x t₂) (x2 ∷ []) | empty | empty = node empty x2 empty 
-  update (node t₁ x t₂) v | empty | node x2 x₁ x3 = 
-    node empty x (update (node x2 x₁ x3) v)
-  update (node t₁ x t₂) v | node x1 x₁ x3 | x2 = {!!}
--}
+  -- VERSION WITH VIEWS
   
+  updateView : {A : Set} -> (s : Tree A) -> Vec A (#leafsView s) -> Tree A
+  updateView empty _ = empty
+  updateView (node t x t₁) v with isLeafView (node t x t₁)
+  ...                          | yes = node empty (head v) empty
+  ...                          | noL = node (updateView t (take (#leafsView t) v)) x empty
+  ...                          | noR = node empty x (updateView t (take (#leafsView t) v))
+  ...                          | noLR = node (updateView t (take (#leafsView t) v)) x (updateView t₁ (drop (#leafsView t) v))
+
+
+  updateViewPat : {A : Set} -> (s : Tree A) -> Vec A (#leafsPat s) -> Tree A
+  updateViewPat empty _ = empty
+  updateViewPat (node t x t₁) v with isLeafView (node t x t₁)
+  ...                          | yes = node empty (head v) empty
+  ...                          | noL = node (updateViewPat t (take (#leafsPat t) v)) x empty
+  ...                          | noR = node empty x (updateViewPat t (take (#leafsPat t) v))
+  ...                          | noLR = node (updateViewPat t (take (#leafsPat t) v)) x (updateViewPat t₁ (drop (#leafsPat t) v))
+
+
+  updateViewNoPat : {A : Set} -> (s : Tree A) -> Vec A (#leafs s) -> Tree A
+  updateViewNoPat empty _ = empty
+  updateViewNoPat (node t x t₁) v with isLeafView (node t x t₁)
+  ...                          | yes = node empty (head v) empty
+  ...                          | noL = node (updateViewNoPat t (take (#leafs t) v)) x empty
+  ...                          | noR = node empty x (updateViewNoPat t (take (#leafs t) v))
+  ...                          | noLR = node (updateViewNoPat t (take (#leafs t) v)) x (updateViewNoPat t₁ (drop (#leafs t) v))
+
+

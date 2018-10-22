@@ -15,10 +15,10 @@ module trees where
 
   -- Plain version
   
-  #leafs' : {A : Set} -> Tree A -> ℕ
-  #leafs' empty = zero
-  #leafs' (node empty x empty) = 1
-  #leafs' (node t x t₁) = #leafs' t + #leafs' t₁
+  #leafsPat : {A : Set} -> Tree A -> ℕ
+  #leafsPat empty = zero
+  #leafsPat (node empty x empty) = 1
+  #leafsPat (node t x t₁) = #leafsPat t + #leafsPat t₁
 
   -- Version with boolean function isLeaf
   
@@ -42,18 +42,18 @@ module trees where
     noR : {x x1 : A} -> {l1 r1 : Tree A} -> IsLeaf A (node empty x (node l1 x1 r1))
     noLR : {x x1 x2 : A} -> {l1 l2 r1 r2 : Tree A} -> IsLeaf A (node (node l1 x1 r1) x (node l2 x2 r2))
 
-  isLeaf'' : {A : Set} -> (t : Tree A) -> IsLeaf A t
-  isLeaf'' empty = noE
-  isLeaf'' (node empty _ empty) = yes
-  isLeaf'' (node empty x (node l1 x1 r1)) = noR
-  isLeaf'' (node (node l1 x1 r1) x empty) = noL
-  isLeaf'' (node (node l1 x1 r1) x (node l2 x2 r2)) = noLR
+  isLeafView : {A : Set} -> (t : Tree A) -> IsLeaf A t
+  isLeafView empty = noE
+  isLeafView (node empty _ empty) = yes
+  isLeafView (node empty x (node l1 x1 r1)) = noR
+  isLeafView (node (node l1 x1 r1) x empty) = noL
+  isLeafView (node (node l1 x1 r1) x (node l2 x2 r2)) = noLR
 
-  #leafs'' : {A : Set} -> Tree A -> ℕ
-  #leafs'' t with isLeaf'' t 
-  #leafs'' empty | no = zero 
-  #leafs'' (node .empty x .empty) | yes = 1
-  #leafs'' (node t x t₁) | no = #leafs'' t + #leafs'' t₁
+  #leafsView : {A : Set} -> Tree A -> ℕ
+  #leafsView t with isLeafView t 
+  #leafsView empty | no = zero 
+  #leafsView (node .empty x .empty) | yes = 1
+  #leafsView (node t x t₁) | no = #leafsView t + #leafsView t₁
  
 
 
